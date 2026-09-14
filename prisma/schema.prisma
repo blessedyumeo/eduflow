@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderType {
+  COURSE
+  SUBSCRIPTION
+}
+
+enum OrderStatus {
+  PENDING
+  SUCCEEDED
+  CANCELED
+}
+
+enum AccessSource {
+  PURCHASE
+  SUBSCRIPTION
+  MANUAL
+}
+
+model User {
+  id                String           @id @default(cuid())
+  email             String           @unique
+  name              String
+  passwordHash      String
+  role              Role             @default(USER)
+  subscriptionUntil DateTime?
+  createdAt         DateTime         @default(now())
+
+  enrollments       Enrollment[]
+  orders            Order[]
+  progress          LessonProgress[]
+
+  @@index([createdAt])
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String   @default("")
+  description String   @default("")
+  cover       String   @default("")
+  author      String   @default("")
+  level       String   @default("Начальный")
+  /// Цена в копейках. 0 — бесплатный курс.
+  price       Int      @default(0)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  lessons     Lesson[]
+  enrollments Enrollment[]
+  orders      Order[]
+
+  @@index([published])
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  courseId    String
+  title       String
+  description String   @default("")
+  /// Ссылка на видео (YouTube / Kinescope / MP4). Для демо можно оставить пустым.
+  videoUrl    String   @default("")
+  content     String   @default("")
+  duration    Int      @default(0)
+  position    Int      @default(0)
+  isPreview   Boolean  @default(false)
+
+  course      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress    LessonProgress[]
+
+  @@index([courseId, position])
+}
+
+model Enrollment {
+  id        String       @id @default(cuid())
+  userId    String
+  courseId  String
+  source    AccessSource @default(PURCHASE)
+  createdAt DateTime     @default(now())
+
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model LessonProgress {
+  id          String    @id @default(cuid())
+  userId      String
+  lessonId    String
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  courseId        String?
+  type            OrderType   @default(COURSE)
+  /// Сумма в копейках
+  amount          Int
+  status          OrderStatus @default(PENDING)
+  /// Количество месяцев подписки (для type = SUBSCRIPTION)
+  months          Int         @default(0)
+  provider        String      @default("mock")
+  paymentId       String?
+  confirmationUrl String?
+  createdAt       DateTime    @default(now())
+  paidAt          DateTime?
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
