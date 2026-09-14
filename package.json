@@ -16,6 +16,13 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "prisma": true,
+    "esbuild": true,
+    "sharp": true
+  },
   "dependencies": {
     "@prisma/client": "6.5.0",
     "bcryptjs": "2.4.3",
