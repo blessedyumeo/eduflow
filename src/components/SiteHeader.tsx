@@ -7,8 +7,15 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
   const pro = hasActiveSubscription(user);
 
+  const demo = process.env.PAYMENT_MODE !== 'yookassa';
+
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-ink-950/80 backdrop-blur">
+      {demo && (
+        <p className="bg-brand-500/10 px-4 py-1.5 text-center text-xs text-brand-200">
+          Демо-версия проекта: оплата эмулируется, настоящая карта не нужна
+        </p>
+      )}
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-accent text-sm font-bold text-ink-950">

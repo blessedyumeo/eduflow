@@ -84,6 +84,20 @@ export function AuthForm({ mode, next }: { mode: 'login' | 'register'; next: str
         </SubmitButton>
       </form>
 
+      {isLogin && (
+        <div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4 text-xs text-slate-400">
+          <p className="font-medium text-slate-300">Демо-доступы</p>
+          <p className="mt-1.5">
+            Администратор: <code className="text-slate-200">admin@eduflow.ru</code> /{' '}
+            <code className="text-slate-200">admin12345</code>
+          </p>
+          <p className="mt-1">
+            Студент: <code className="text-slate-200">student@eduflow.ru</code> /{' '}
+            <code className="text-slate-200">student12345</code>
+          </p>
+        </div>
+      )}
+
       <p className="mt-6 text-center text-sm text-slate-500">
         {isLogin ? (
           <>

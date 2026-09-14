@@ -10,8 +10,19 @@ export function paymentMode(): PaymentMode {
   return process.env.PAYMENT_MODE === 'yookassa' ? 'yookassa' : 'mock';
 }
 
+/**
+ * Публичный адрес приложения. На Vercel домен известен только после деплоя,
+ * поэтому если APP_URL не задан — берём его из переменных, которые Vercel
+ * подставляет сам.
+ */
 export function appUrl(): string {
-  return (process.env.APP_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/+$/, '');
+
+  const vercel =
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+  if (vercel) return `https://${vercel.replace(/\/+$/, '')}`;
+
+  return 'http://localhost:3000';
 }
 
 function authHeader(): string {
@@ -46,10 +57,11 @@ export async function createPayment(params: {
 
   // Демо-режим: платёж эмулируется внутри приложения, ключи не нужны.
   if (mode === 'mock') {
+    // Относительный путь — работает на любом домене без настройки APP_URL.
     return {
       provider: 'mock',
       paymentId: `mock_${randomUUID()}`,
-      confirmationUrl: `${appUrl()}/checkout/${params.orderId}`,
+      confirmationUrl: `/checkout/${params.orderId}`,
     };
   }
 
